@@ -17,6 +17,15 @@
           Todos pueden ver el detalle completo de todas las rendiciones guardadas.
         </p>
         <button id="install-app" type="button" hidden>Descargar app</button>
+
+        <div class="sharing-tools">
+          <button id="export-data" type="button">Exportar rendiciones</button>
+          <label class="import-label">
+            Importar rendiciones
+            <input id="import-data" type="file" accept="application/json" />
+          </label>
+          <button id="clear-filter" type="button">Ver todo</button>
+        </div>
       </header>
 
       <section class="card">
@@ -83,7 +92,13 @@
       </section>
 
       <section class="card">
-        <h2>Resumen de rendiciones</h2>
+        <div class="summary-header">
+          <h2>Resumen de rendiciones</h2>
+          <div class="detail-search-inline">
+            <input id="detail-search-input" type="text" placeholder="Buscar por nombre o N° rendición" />
+            <button id="detail-search-button" type="button">Buscar</button>
+          </div>
+        </div>
         <p id="empty-renditions">Aún no hay rendiciones guardadas.</p>
 
         <div class="table-wrapper">
@@ -106,6 +121,7 @@
 
       <section class="card">
         <h2>Detalle de todas las rendiciones</h2>
+        <p class="muted">Puedes filtrar con el buscador de arriba.</p>
         <p id="empty-all-details">Aún no hay detalles para mostrar.</p>
         <div id="all-details"></div>
       </section>

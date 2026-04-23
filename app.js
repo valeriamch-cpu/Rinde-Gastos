@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'rinde_gastos_db_v4';
+const LEGACY_STORAGE_KEYS = ['rinde_gastos_db_v3', 'rinde_gastos_db_v2'];
 
 const renditionForm = document.querySelector('#rendition-form');
 const expenseForm = document.querySelector('#expense-form');
@@ -19,6 +20,11 @@ const globalTotalElement = document.querySelector('#global-total');
 const allDetailsContainer = document.querySelector('#all-details');
 const emptyAllDetails = document.querySelector('#empty-all-details');
 const installAppButton = document.querySelector('#install-app');
+const detailSearchInput = document.querySelector('#detail-search-input');
+const detailSearchButton = document.querySelector('#detail-search-button');
+const clearFilterButton = document.querySelector('#clear-filter');
+const exportDataButton = document.querySelector('#export-data');
+const importDataInput = document.querySelector('#import-data');
 
 const currencyFormatter = new Intl.NumberFormat('es-CL', {
   style: 'currency',
@@ -31,22 +37,42 @@ let deferredInstallPrompt = null;
 const defaultData = { renditions: [] };
 let state = loadState();
 let draftExpenses = [];
+let detailsFilter = '';
 
 function loadState() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) {
-    return structuredClone(defaultData);
+  const parseState = (raw) => {
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed.renditions)) {
+        return null;
+      }
+
+      return {
+        renditions: parsed.renditions,
+      };
+    } catch (error) {
+      return null;
+    }
+  };
+
+  const currentState = parseState(localStorage.getItem(STORAGE_KEY));
+  if (currentState) {
+    return currentState;
   }
 
-  try {
-    const parsed = JSON.parse(raw);
-    return {
-      renditions: Array.isArray(parsed.renditions) ? parsed.renditions : [],
-    };
-  } catch (error) {
-    console.error('No se pudo leer almacenamiento local:', error);
-    return structuredClone(defaultData);
+  for (const key of LEGACY_STORAGE_KEYS) {
+    const legacyState = parseState(localStorage.getItem(key));
+    if (legacyState) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(legacyState));
+      return legacyState;
+    }
   }
+
+  return structuredClone(defaultData);
 }
 
 function persistState() {
@@ -152,6 +178,28 @@ function renderSummary() {
   globalTotalElement.textContent = currencyFormatter.format(globalTotal);
 }
 
+function normalizeSearchText(value) {
+  return String(value)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function filteredRenditions() {
+  const query = normalizeSearchText(detailsFilter);
+  if (!query) {
+    return state.renditions;
+  }
+
+  return state.renditions.filter((rendition) => {
+    const byNumber = normalizeSearchText(rendition.renditionNumber).includes(query);
+    const byEmployee = normalizeSearchText(rendition.employee).includes(query);
+    return byNumber || byEmployee;
+  });
+}
+
 function renderAllDetails() {
   allDetailsContainer.innerHTML = '';
 
@@ -160,9 +208,17 @@ function renderAllDetails() {
     return;
   }
 
-  emptyAllDetails.hidden = true;
+  const renditionsToShow = filteredRenditions();
+  if (renditionsToShow.length === 0) {
+    emptyAllDetails.hidden = false;
+    emptyAllDetails.textContent = 'No hay rendiciones que coincidan con la búsqueda.';
+    return;
+  }
 
-  state.renditions.forEach((rendition) => {
+  emptyAllDetails.hidden = true;
+  emptyAllDetails.textContent = 'Aún no hay detalles para mostrar.';
+
+  renditionsToShow.forEach((rendition) => {
     const detailCard = document.createElement('article');
     detailCard.className = 'detail-card';
 
@@ -208,6 +264,70 @@ function renderAllDetails() {
   });
 }
 
+
+function exportData() {
+  const payload = {
+    exportedAt: new Date().toISOString(),
+    renditions: state.renditions,
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `rendiciones-${new Date().toISOString().slice(0, 10)}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function mergeImportedRenditions(renditions) {
+  const existingNumbers = new Set(state.renditions.map((item) => item.renditionNumber));
+  let added = 0;
+
+  renditions.forEach((rendition) => {
+    if (!rendition?.renditionNumber || existingNumbers.has(rendition.renditionNumber)) {
+      return;
+    }
+
+    const normalized = {
+      id: rendition.id || crypto.randomUUID(),
+      renditionNumber: String(rendition.renditionNumber),
+      employee: String(rendition.employee || 'Sin nombre'),
+      status: rendition.status || 'Pendiente',
+      total: Number(rendition.total || 0),
+      expenses: Array.isArray(rendition.expenses) ? rendition.expenses : [],
+      createdAt: rendition.createdAt || new Date().toISOString(),
+    };
+
+    state.renditions.push(normalized);
+    existingNumbers.add(normalized.renditionNumber);
+    added += 1;
+  });
+
+  if (added > 0) {
+    persistState();
+    render();
+  }
+
+  alert(`Importación finalizada. Rendiciones agregadas: ${added}`);
+}
+
+async function importData(file) {
+  if (!file) {
+    return;
+  }
+
+  const text = await file.text();
+  const parsed = JSON.parse(text);
+  const renditions = Array.isArray(parsed) ? parsed : parsed.renditions;
+
+  if (!Array.isArray(renditions)) {
+    alert('El archivo no tiene formato válido de rendiciones.');
+    return;
+  }
+
+  mergeImportedRenditions(renditions);
+}
 
 function setupPwaInstall() {
   if ('serviceWorker' in navigator) {
@@ -261,6 +381,40 @@ allDetailsContainer.addEventListener('change', (event) => {
 
   rendition.status = select.value;
   persistState();
+});
+
+detailSearchButton.addEventListener('click', () => {
+  detailsFilter = detailSearchInput.value;
+  renderAllDetails();
+});
+
+detailSearchInput.addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter') {
+    return;
+  }
+
+  event.preventDefault();
+  detailSearchButton.click();
+});
+
+clearFilterButton.addEventListener('click', () => {
+  detailsFilter = '';
+  detailSearchInput.value = '';
+  renderAllDetails();
+});
+
+exportDataButton.addEventListener('click', () => {
+  exportData();
+});
+
+importDataInput.addEventListener('change', async (event) => {
+  try {
+    await importData(event.target.files[0]);
+  } catch (error) {
+    alert('No se pudo importar el archivo.');
+  } finally {
+    importDataInput.value = '';
+  }
 });
 
 expenseForm.addEventListener('submit', async (event) => {

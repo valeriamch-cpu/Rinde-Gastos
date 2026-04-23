@@ -33,6 +33,29 @@ header {
   margin-top: 0.5rem;
 }
 
+
+.sharing-tools {
+  margin-top: 0.7rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.import-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  cursor: pointer;
+}
+
+#import-data {
+  display: none;
+}
+
 h1,
 h2,
 h3 {
@@ -45,6 +68,25 @@ h3 {
   border-radius: 12px;
   padding: 1rem;
   margin-bottom: 1rem;
+}
+
+
+.summary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.detail-search-inline {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.detail-search-inline input {
+  min-width: 240px;
 }
 
 .inline-grid {
