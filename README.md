@@ -12,7 +12,7 @@ Aplicación web para crear rendiciones con múltiples gastos y guardarlas al fin
 
 ## Qué puede hacer quien entre
 
-- Subir sus rendiciones desde el formulario superior.
+- Subir sus rendiciones desde el formulario superior (se permite mismo número de rendición para personas distintas).
 - Ver el resumen de todas las rendiciones guardadas.
 - Ver el detalle de **todas** las rendiciones en la sección inferior.
 - Usar buscador por nombre o número de rendición para filtrar detalles.
@@ -21,7 +21,7 @@ Aplicación web para crear rendiciones con múltiples gastos y guardarlas al fin
 
 ## Persistencia
 
-Los datos quedan guardados en `localStorage` del navegador (`rinde_gastos_db_v4`).
+Los datos quedan guardados en `localStorage` del navegador (`rinde_gastos_shared`) y se replica en `rinde_gastos_db_v4` para compatibilidad.
 
 La app también migra automáticamente datos antiguos (`rinde_gastos_db_v3` / `rinde_gastos_db_v2`) para que no pierdas lo que ya habías cargado.
 

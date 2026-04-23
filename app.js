@@ -1,5 +1,5 @@
-const STORAGE_KEY = 'rinde_gastos_db_v4';
-const LEGACY_STORAGE_KEYS = ['rinde_gastos_db_v3', 'rinde_gastos_db_v2'];
+const STORAGE_KEY = 'rinde_gastos_shared';
+const LEGACY_STORAGE_KEYS = ['rinde_gastos_db_v4', 'rinde_gastos_db_v3', 'rinde_gastos_db_v2'];
 
 const renditionForm = document.querySelector('#rendition-form');
 const expenseForm = document.querySelector('#expense-form');
@@ -68,6 +68,7 @@ function loadState() {
     const legacyState = parseState(localStorage.getItem(key));
     if (legacyState) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(legacyState));
+      localStorage.setItem('rinde_gastos_db_v4', JSON.stringify(legacyState));
       return legacyState;
     }
   }
@@ -76,7 +77,9 @@ function loadState() {
 }
 
 function persistState() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const payload = JSON.stringify(state);
+  localStorage.setItem(STORAGE_KEY, payload);
+  localStorage.setItem('rinde_gastos_db_v4', payload);
 }
 
 function readFileAsDataUrl(file) {
@@ -149,20 +152,26 @@ function renderDraft() {
 function renderSummary() {
   renditionsBody.innerHTML = '';
 
-  if (state.renditions.length === 0) {
+  const renditionsToShow = filteredRenditions();
+
+  if (renditionsToShow.length === 0) {
     emptyRenditions.hidden = false;
+    emptyRenditions.textContent = state.renditions.length === 0
+      ? 'Aún no hay rendiciones guardadas.'
+      : 'No hay rendiciones que coincidan con la búsqueda.';
     renditionsTable.hidden = true;
     globalTotals.hidden = true;
     return;
   }
 
   emptyRenditions.hidden = true;
+  emptyRenditions.textContent = 'Aún no hay rendiciones guardadas.';
   renditionsTable.hidden = false;
   globalTotals.hidden = false;
 
   let globalTotal = 0;
 
-  state.renditions.forEach((rendition) => {
+  renditionsToShow.forEach((rendition) => {
     globalTotal += rendition.total;
 
     const row = document.createElement('tr');
@@ -185,6 +194,10 @@ function normalizeSearchText(value) {
     .replace(/[̀-ͯ]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function renditionKey(employee, renditionNumber) {
+  return `${normalizeSearchText(employee)}::${normalizeSearchText(renditionNumber)}`;
 }
 
 function filteredRenditions() {
@@ -281,11 +294,12 @@ function exportData() {
 }
 
 function mergeImportedRenditions(renditions) {
-  const existingNumbers = new Set(state.renditions.map((item) => item.renditionNumber));
+  const existingKeys = new Set(state.renditions.map((item) => renditionKey(item.employee, item.renditionNumber)));
   let added = 0;
 
   renditions.forEach((rendition) => {
-    if (!rendition?.renditionNumber || existingNumbers.has(rendition.renditionNumber)) {
+    const key = renditionKey(rendition.employee || '', rendition.renditionNumber || '');
+    if (!rendition?.renditionNumber || existingKeys.has(key)) {
       return;
     }
 
@@ -300,7 +314,7 @@ function mergeImportedRenditions(renditions) {
     };
 
     state.renditions.push(normalized);
-    existingNumbers.add(normalized.renditionNumber);
+    existingKeys.add(key);
     added += 1;
   });
 
@@ -385,6 +399,7 @@ allDetailsContainer.addEventListener('change', (event) => {
 
 detailSearchButton.addEventListener('click', () => {
   detailsFilter = detailSearchInput.value;
+  renderSummary();
   renderAllDetails();
 });
 
@@ -400,7 +415,7 @@ detailSearchInput.addEventListener('keydown', (event) => {
 clearFilterButton.addEventListener('click', () => {
   detailsFilter = '';
   detailSearchInput.value = '';
-  renderAllDetails();
+  render();
 });
 
 exportDataButton.addEventListener('click', () => {
@@ -464,9 +479,12 @@ saveRenditionButton.addEventListener('click', () => {
     return;
   }
 
-  const alreadyExists = state.renditions.some((rendition) => rendition.renditionNumber === renditionNumber);
+  const newKey = renditionKey(employee, renditionNumber);
+  const alreadyExists = state.renditions.some(
+    (rendition) => renditionKey(rendition.employee, rendition.renditionNumber) === newKey,
+  );
   if (alreadyExists) {
-    alert('Ya existe una rendición con ese número. Usa otro número.');
+    alert('Ya existe una rendición con ese número para el mismo trabajador.');
     return;
   }
 
