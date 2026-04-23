@@ -21,6 +21,8 @@ const detailEmployee = document.querySelector('#detail-employee');
 const detailNumber = document.querySelector('#detail-number');
 const detailStatus = document.querySelector('#detail-status');
 const detailExpensesBody = document.querySelector('#detail-expenses-table tbody');
+const detailSearchInput = document.querySelector('#detail-search-input');
+const detailSearchButton = document.querySelector('#detail-search-button');
 
 const currencyFormatter = new Intl.NumberFormat('es-CL', {
   style: 'currency',
@@ -121,6 +123,19 @@ function renderDraft() {
   draftTotalAmount.textContent = currencyFormatter.format(draftTotal());
 }
 
+function findRenditionByQuery(query) {
+  const normalized = String(query).trim().toLowerCase();
+  if (!normalized) {
+    return null;
+  }
+
+  return state.renditions.find((rendition) => {
+    const byNumber = rendition.renditionNumber.toLowerCase().includes(normalized);
+    const byEmployee = rendition.employee.toLowerCase().includes(normalized);
+    return byNumber || byEmployee;
+  }) || null;
+}
+
 function renderDetail() {
   const rendition = state.renditions.find((item) => item.id === selectedRenditionId);
 
@@ -203,6 +218,27 @@ detailStatus.addEventListener('change', (event) => {
 
   rendition.status = event.target.value;
   persistState();
+});
+
+
+detailSearchButton.addEventListener('click', () => {
+  const result = findRenditionByQuery(detailSearchInput.value);
+  if (!result) {
+    alert('No se encontró una rendición con ese nombre o número.');
+    return;
+  }
+
+  selectedRenditionId = result.id;
+  renderDetail();
+});
+
+detailSearchInput.addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter') {
+    return;
+  }
+
+  event.preventDefault();
+  detailSearchButton.click();
 });
 
 expenseForm.addEventListener('submit', async (event) => {

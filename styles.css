@@ -120,6 +120,22 @@ small {
   margin-top: 0.9rem;
 }
 
+
+.detail-search {
+  margin-top: 1rem;
+}
+
+.detail-search-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.detail-search-row input {
+  flex: 1;
+  min-width: 220px;
+}
+
 .detail-panel {
   margin-top: 1rem;
   padding-top: 1rem;
