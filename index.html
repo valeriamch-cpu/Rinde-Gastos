@@ -11,8 +11,8 @@
       <header>
         <h1>Rinde-Gastos</h1>
         <p>
-          Carga una rendición de gastos por trabajador y revisa un resumen inicial
-          con el tipo de gasto, el valor y los respaldos adjuntos.
+          Carga rendiciones de trabajadores y revisa el detalle con respaldos. Esta
+          versión guarda los datos en una base local del navegador.
         </p>
       </header>
 
@@ -36,17 +36,27 @@
           </div>
 
           <div class="field">
-            <label for="amount">Valor</label>
-            <input id="amount" name="amount" type="number" min="0" step="0.01" required />
+            <label for="detail">Detalle</label>
+            <textarea
+              id="detail"
+              name="detail"
+              rows="3"
+              placeholder="Ej: Taxi aeropuerto a oficina"
+            ></textarea>
           </div>
 
           <div class="field">
-            <label for="backups">Respaldos (boletas, facturas, etc.)</label>
-            <input id="backups" name="backups" type="file" multiple />
-            <small>Los archivos se registran por nombre en esta primera versión.</small>
+            <label for="amount">Valor</label>
+            <input id="amount" name="amount" type="number" min="0" step="1" required />
           </div>
 
-          <button type="submit">Agregar rendición</button>
+          <div class="field">
+            <label for="backups">Respaldos (boletas, facturas, imágenes)</label>
+            <input id="backups" name="backups" type="file" multiple accept="image/*,.pdf" />
+            <small>Las imágenes se guardan en la base local para poder previsualizarlas.</small>
+          </div>
+
+          <button type="submit">Guardar rendición</button>
         </form>
       </section>
 
@@ -60,6 +70,7 @@
               <tr>
                 <th>Trabajador</th>
                 <th>Gasto</th>
+                <th>Detalle</th>
                 <th>Valor</th>
                 <th>Respaldos</th>
               </tr>
@@ -72,6 +83,14 @@
           <p><strong>Total rendiciones:</strong> <span id="count">0</span></p>
           <p><strong>Total valor:</strong> <span id="total-amount">$0</span></p>
         </div>
+      </section>
+
+      <section class="card">
+        <h2>Vista tipo base de datos (JSON)</h2>
+        <p class="muted">
+          Aquí puedes ver exactamente cómo queda guardada cada rendición y sus adjuntos.
+        </p>
+        <pre id="database-view">[]</pre>
       </section>
     </main>
 
