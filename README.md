@@ -14,7 +14,7 @@ Aplicación web para crear rendiciones con múltiples gastos y guardarlas al fin
 
 - En el resumen se muestra **solo el total de cada rendición**.
 - Al hacer click en **Ver detalle**, se despliega el detalle completo de esa rendición.
-- En la parte inferior hay un buscador por nombre o número de rendición para abrir su detalle rápidamente.
+- Al lado del título **Resumen de rendiciones** hay un buscador por nombre o número para abrir el detalle rápidamente.
 - En el detalle se puede cambiar estado: **Pendiente**, **Revisado**, **Pagado**.
 
 ## Persistencia

@@ -85,7 +85,17 @@
       </section>
 
       <section class="card">
-        <h2>Resumen de rendiciones</h2>
+        <div class="summary-header">
+          <h2>Resumen de rendiciones</h2>
+          <div class="detail-search-inline">
+            <input
+              id="detail-search-input"
+              type="text"
+              placeholder="Buscar por nombre o N° rendición"
+            />
+            <button id="detail-search-button" type="button">Buscar</button>
+          </div>
+        </div>
         <p id="empty-renditions">Aún no hay rendiciones guardadas.</p>
 
         <div class="table-wrapper">
@@ -105,18 +115,6 @@
           <p><strong>Total general:</strong> <span id="global-total">$0</span></p>
         </div>
 
-
-        <div class="detail-search">
-          <label for="detail-search-input">Buscar detalle por nombre o N° rendición</label>
-          <div class="detail-search-row">
-            <input
-              id="detail-search-input"
-              type="text"
-              placeholder="Ej: Ana Pérez o R-2026-001"
-            />
-            <button id="detail-search-button" type="button">Buscar detalle</button>
-          </div>
-        </div>
 
         <div id="detail-panel" class="detail-panel" hidden>
           <h3>Detalle de rendición</h3>
