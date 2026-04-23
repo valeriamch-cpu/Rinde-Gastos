@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rinde-Gastos</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Rinde-Gastos</h1>
+        <p>
+          Crea una rendición, agrégale múltiples gastos y guarda la rendición al final.
+        </p>
+      </header>
+
+      <section class="card">
+        <h2>Nueva rendición (borrador)</h2>
+        <form id="rendition-form" class="inline-grid">
+          <div class="field">
+            <label for="employee">Nombre trabajador</label>
+            <input id="employee" name="employee" type="text" required placeholder="Ej: Ana Pérez" />
+          </div>
+
+          <div class="field">
+            <label for="renditionNumber">Número de rendición</label>
+            <input id="renditionNumber" name="renditionNumber" type="text" required placeholder="Ej: R-2026-001" />
+          </div>
+        </form>
+
+        <h3>Agregar gasto al borrador</h3>
+        <form id="expense-form" class="inline-grid">
+          <div class="field">
+            <label for="expenseType">Tipo de gasto</label>
+            <input id="expenseType" name="expenseType" type="text" required placeholder="Ej: Transporte" />
+          </div>
+
+          <div class="field">
+            <label for="amount">Monto</label>
+            <input id="amount" name="amount" type="number" min="0" step="1" required />
+          </div>
+
+          <div class="field field-span-2">
+            <label for="backup">Comprobante (archivo o PDF)</label>
+            <input id="backup" name="backup" type="file" accept="image/*,.pdf" />
+          </div>
+
+          <div class="field field-span-2">
+            <label for="cameraBackup">Tomar foto con cámara (celular)</label>
+            <input
+              id="cameraBackup"
+              name="cameraBackup"
+              type="file"
+              accept="image/*"
+              capture="environment"
+            />
+            <small>En celular puedes abrir cámara directo para adjuntar la imagen.</small>
+          </div>
+
+          <div class="field field-span-2">
+            <button type="submit">Agregar gasto al borrador</button>
+          </div>
+        </form>
+
+        <p id="empty-draft">Aún no has agregado gastos al borrador.</p>
+        <div class="table-wrapper">
+          <table id="draft-table" hidden>
+            <thead>
+              <tr>
+                <th>Tipo gasto</th>
+                <th>Monto</th>
+                <th>Comprobante</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div id="draft-total" hidden>
+          <p><strong>Total borrador:</strong> <span id="draft-total-amount">$0</span></p>
+        </div>
+
+        <button id="save-rendition" type="button" class="save-btn">Guardar rendición</button>
+      </section>
+
+      <section class="card">
+        <h2>Resumen de rendiciones</h2>
+        <p id="empty-renditions">Aún no hay rendiciones guardadas.</p>
+
+        <div class="table-wrapper">
+          <table id="renditions-table" hidden>
+            <thead>
+              <tr>
+                <th>N° Rendición</th>
+                <th>Total rendición</th>
+                <th>Detalle</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div id="global-totals" hidden>
+          <p><strong>Total general:</strong> <span id="global-total">$0</span></p>
+        </div>
+
+        <div id="detail-panel" class="detail-panel" hidden>
+          <h3>Detalle de rendición</h3>
+          <p><strong>Trabajador:</strong> <span id="detail-employee"></span></p>
+          <p><strong>N° Rendición:</strong> <span id="detail-number"></span></p>
+          <p>
+            <strong>Estado:</strong>
+            <select id="detail-status" class="status-select">
+              <option value="Pendiente">Pendiente</option>
+              <option value="Revisado">Revisado</option>
+              <option value="Pagado">Pagado</option>
+            </select>
+          </p>
+
+          <div class="table-wrapper">
+            <table id="detail-expenses-table">
+              <thead>
+                <tr>
+                  <th>Tipo gasto</th>
+                  <th>Monto</th>
+                  <th>Comprobante</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
