@@ -1,30 +1,26 @@
 # Rinde-Gastos
 
-Aplicación web para cargar gastos de rendiciones con comprobantes y ver un resumen por número de rendición.
+Aplicación web para crear rendiciones con múltiples gastos y guardarlas al final.
 
-## Campos de ingreso
+## Flujo correcto
 
-- Nombre del trabajador.
-- Número de rendición.
-- Tipo de gasto.
-- Monto.
-- Comprobante (imagen o PDF) por cada gasto.
+1. Completar datos de la rendición: trabajador y número.
+2. Agregar uno o más gastos al borrador (tipo, monto y comprobante).
+3. Revisar total del borrador.
+4. Presionar **Guardar rendición**.
 
 ## Qué muestra el sistema
 
-- Tabla de gastos ingresados con su comprobante.
-- Resumen por número de rendición con:
-  - Total de la rendición (suma de sus gastos).
-  - Estado por defecto **Pendiente**.
-  - Cambio de estado a **Revisado** o **Pagado**.
-- Total general acumulado.
+- Rendiciones guardadas con total y estado.
+- Estado por defecto: **Pendiente**.
+- Cambio de estado a **Revisado** o **Pagado**.
+- Detalle de gastos por cada rendición guardada.
 
 ## Persistencia
 
-Los datos quedan guardados en `localStorage` del navegador (`rinde_gastos_db_v2`).
+Los datos quedan guardados en `localStorage` del navegador (`rinde_gastos_db_v3`).
 
 ## Uso rápido
 
 1. Abre `index.html` en tu navegador.
-2. Ingresa cada gasto con su comprobante.
-3. Revisa el total por rendición y cambia el estado según avance el proceso.
+2. Sigue el flujo de borrador y guarda la rendición al finalizar.

@@ -11,14 +11,13 @@
       <header>
         <h1>Rinde-Gastos</h1>
         <p>
-          Ingresa gastos por rendición con su comprobante, calcula el total y gestiona
-          el estado: Pendiente, Revisado o Pagado.
+          Crea una rendición, agrégale múltiples gastos y guarda la rendición al final.
         </p>
       </header>
 
       <section class="card">
-        <h2>Nuevo gasto de rendición</h2>
-        <form id="expense-form">
+        <h2>Nueva rendición (borrador)</h2>
+        <form id="rendition-form" class="inline-grid">
           <div class="field">
             <label for="employee">Nombre trabajador</label>
             <input id="employee" name="employee" type="text" required placeholder="Ej: Ana Pérez" />
@@ -34,16 +33,13 @@
               placeholder="Ej: R-2026-001"
             />
           </div>
+        </form>
 
+        <h3>Agregar gasto al borrador</h3>
+        <form id="expense-form" class="inline-grid">
           <div class="field">
             <label for="expenseType">Tipo de gasto</label>
-            <input
-              id="expenseType"
-              name="expenseType"
-              type="text"
-              required
-              placeholder="Ej: Transporte"
-            />
+            <input id="expenseType" name="expenseType" type="text" required placeholder="Ej: Transporte" />
           </div>
 
           <div class="field">
@@ -51,25 +47,21 @@
             <input id="amount" name="amount" type="number" min="0" step="1" required />
           </div>
 
-          <div class="field">
+          <div class="field field-span-2">
             <label for="backup">Comprobante</label>
             <input id="backup" name="backup" type="file" accept="image/*,.pdf" required />
           </div>
 
-          <button type="submit">Agregar gasto</button>
+          <div class="field field-span-2">
+            <button type="submit">Agregar gasto al borrador</button>
+          </div>
         </form>
-      </section>
 
-      <section class="card">
-        <h2>Gastos ingresados</h2>
-        <p id="empty-expenses">Aún no hay gastos cargados.</p>
-
-        <div class="table-wrapper" aria-live="polite">
-          <table id="expenses-table" hidden>
+        <p id="empty-draft">Aún no has agregado gastos al borrador.</p>
+        <div class="table-wrapper">
+          <table id="draft-table" hidden>
             <thead>
               <tr>
-                <th>N° Rendición</th>
-                <th>Trabajador</th>
                 <th>Tipo gasto</th>
                 <th>Monto</th>
                 <th>Comprobante</th>
@@ -78,14 +70,20 @@
             <tbody></tbody>
           </table>
         </div>
+
+        <div id="draft-total" hidden>
+          <p><strong>Total borrador:</strong> <span id="draft-total-amount">$0</span></p>
+        </div>
+
+        <button id="save-rendition" type="button" class="save-btn">Guardar rendición</button>
       </section>
 
       <section class="card">
-        <h2>Resumen por rendición</h2>
-        <p id="empty-summary">Aún no hay rendiciones para resumir.</p>
+        <h2>Rendiciones guardadas</h2>
+        <p id="empty-renditions">Aún no hay rendiciones guardadas.</p>
 
-        <div class="table-wrapper" aria-live="polite">
-          <table id="summary-table" hidden>
+        <div class="table-wrapper">
+          <table id="renditions-table" hidden>
             <thead>
               <tr>
                 <th>N° Rendición</th>
@@ -100,6 +98,26 @@
 
         <div id="global-totals" hidden>
           <p><strong>Total general:</strong> <span id="global-total">$0</span></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Detalle de gastos por rendición</h2>
+        <p id="empty-expenses">Aún no hay gastos guardados.</p>
+
+        <div class="table-wrapper">
+          <table id="expenses-table" hidden>
+            <thead>
+              <tr>
+                <th>N° Rendición</th>
+                <th>Trabajador</th>
+                <th>Tipo gasto</th>
+                <th>Monto</th>
+                <th>Comprobante</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
       </section>
     </main>

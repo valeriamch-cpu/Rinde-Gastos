@@ -29,7 +29,8 @@ header {
 }
 
 h1,
-h2 {
+h2,
+h3 {
   margin: 0 0 0.6rem;
 }
 
@@ -41,11 +42,21 @@ h2 {
   margin-bottom: 1rem;
 }
 
+.inline-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
 .field {
-  margin-bottom: 0.9rem;
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+}
+
+.field-span-2 {
+  grid-column: span 2;
 }
 
 input,
@@ -73,6 +84,10 @@ button:disabled {
   cursor: wait;
 }
 
+.save-btn {
+  margin-top: 0.5rem;
+}
+
 .table-wrapper {
   overflow-x: auto;
 }
@@ -95,7 +110,8 @@ td {
   color: #55657a;
 }
 
-#global-totals {
+#global-totals,
+#draft-total {
   margin-top: 0.9rem;
 }
 

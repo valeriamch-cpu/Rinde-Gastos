@@ -1,14 +1,24 @@
-const STORAGE_KEY = 'rinde_gastos_db_v2';
+const STORAGE_KEY = 'rinde_gastos_db_v3';
 
-const form = document.querySelector('#expense-form');
-const expensesTable = document.querySelector('#expenses-table');
-const expensesBody = expensesTable.querySelector('tbody');
-const summaryTable = document.querySelector('#summary-table');
-const summaryBody = summaryTable.querySelector('tbody');
-const emptyExpenses = document.querySelector('#empty-expenses');
-const emptySummary = document.querySelector('#empty-summary');
+const renditionForm = document.querySelector('#rendition-form');
+const expenseForm = document.querySelector('#expense-form');
+const saveRenditionButton = document.querySelector('#save-rendition');
+
+const draftTable = document.querySelector('#draft-table');
+const draftBody = draftTable.querySelector('tbody');
+const emptyDraft = document.querySelector('#empty-draft');
+const draftTotalContainer = document.querySelector('#draft-total');
+const draftTotalAmount = document.querySelector('#draft-total-amount');
+
+const renditionsTable = document.querySelector('#renditions-table');
+const renditionsBody = renditionsTable.querySelector('tbody');
+const emptyRenditions = document.querySelector('#empty-renditions');
 const globalTotals = document.querySelector('#global-totals');
 const globalTotalElement = document.querySelector('#global-total');
+
+const expensesTable = document.querySelector('#expenses-table');
+const expensesBody = expensesTable.querySelector('tbody');
+const emptyExpenses = document.querySelector('#empty-expenses');
 
 const currencyFormatter = new Intl.NumberFormat('es-CL', {
   style: 'currency',
@@ -16,12 +26,9 @@ const currencyFormatter = new Intl.NumberFormat('es-CL', {
   maximumFractionDigits: 0,
 });
 
-const defaultData = {
-  expenses: [],
-  renditionStatuses: {},
-};
-
+const defaultData = { renditions: [] };
 let state = loadState();
+let draftExpenses = [];
 
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -32,11 +39,10 @@ function loadState() {
   try {
     const parsed = JSON.parse(raw);
     return {
-      expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
-      renditionStatuses: parsed.renditionStatuses || {},
+      renditions: Array.isArray(parsed.renditions) ? parsed.renditions : [],
     };
   } catch (error) {
-    console.error('No se pudo leer la base local:', error);
+    console.error('No se pudo leer almacenamiento local:', error);
     return structuredClone(defaultData);
   }
 }
@@ -60,7 +66,7 @@ function readFileAsDataUrl(file) {
   });
 }
 
-function expenseReceiptHtml(receipt) {
+function receiptHtml(receipt) {
   if (!receipt) {
     return '<span class="muted">Sin comprobante</span>';
   }
@@ -81,80 +87,62 @@ function normalizedRenditionNumber(value) {
   return String(value).trim().toUpperCase();
 }
 
-function getStatus(renditionNumber) {
-  return state.renditionStatuses[renditionNumber] || 'Pendiente';
+function draftTotal() {
+  return draftExpenses.reduce((sum, expense) => sum + expense.amount, 0);
 }
 
-function setStatus(renditionNumber, status) {
-  state.renditionStatuses[renditionNumber] = status;
-  persistState();
-  renderSummary();
+function renderDraft() {
+  draftBody.innerHTML = '';
+
+  if (draftExpenses.length === 0) {
+    emptyDraft.hidden = false;
+    draftTable.hidden = true;
+    draftTotalContainer.hidden = true;
+    return;
+  }
+
+  emptyDraft.hidden = true;
+  draftTable.hidden = false;
+  draftTotalContainer.hidden = false;
+
+  draftExpenses.forEach((expense) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${expense.expenseType}</td>
+      <td>${currencyFormatter.format(expense.amount)}</td>
+      <td>${receiptHtml(expense.receipt)}</td>
+    `;
+    draftBody.appendChild(row);
+  });
+
+  draftTotalAmount.textContent = currencyFormatter.format(draftTotal());
 }
 
-function groupByRendition(expenses) {
-  return expenses.reduce((groups, expense) => {
-    if (!groups[expense.renditionNumber]) {
-      groups[expense.renditionNumber] = {
-        renditionNumber: expense.renditionNumber,
-        employee: expense.employee,
-        total: 0,
-      };
-    }
-
-    groups[expense.renditionNumber].total += expense.amount;
-    return groups;
-  }, {});
-}
-
-function renderExpenses() {
+function renderRenditions() {
+  renditionsBody.innerHTML = '';
   expensesBody.innerHTML = '';
 
-  if (state.expenses.length === 0) {
+  if (state.renditions.length === 0) {
+    emptyRenditions.hidden = false;
+    renditionsTable.hidden = true;
+    globalTotals.hidden = true;
     emptyExpenses.hidden = false;
     expensesTable.hidden = true;
     return;
   }
 
+  emptyRenditions.hidden = true;
+  renditionsTable.hidden = false;
+  globalTotals.hidden = false;
   emptyExpenses.hidden = true;
   expensesTable.hidden = false;
 
-  state.expenses.forEach((expense) => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${expense.renditionNumber}</td>
-      <td>${expense.employee}</td>
-      <td>${expense.expenseType}</td>
-      <td>${currencyFormatter.format(expense.amount)}</td>
-      <td>${expenseReceiptHtml(expense.receipt)}</td>
-    `;
-
-    expensesBody.appendChild(row);
-  });
-}
-
-function renderSummary() {
-  summaryBody.innerHTML = '';
-
-  const grouped = Object.values(groupByRendition(state.expenses));
-
-  if (grouped.length === 0) {
-    emptySummary.hidden = false;
-    summaryTable.hidden = true;
-    globalTotals.hidden = true;
-    return;
-  }
-
-  emptySummary.hidden = true;
-  summaryTable.hidden = false;
-  globalTotals.hidden = false;
-
   let globalTotal = 0;
 
-  grouped.forEach((rendition) => {
+  state.renditions.forEach((rendition) => {
     globalTotal += rendition.total;
 
-    const row = document.createElement('tr');
-
+    const renditionRow = document.createElement('tr');
     const statusSelect = document.createElement('select');
     statusSelect.className = 'status-select';
 
@@ -165,12 +153,13 @@ function renderSummary() {
       statusSelect.appendChild(option);
     });
 
-    statusSelect.value = getStatus(rendition.renditionNumber);
+    statusSelect.value = rendition.status || 'Pendiente';
     statusSelect.addEventListener('change', (event) => {
-      setStatus(rendition.renditionNumber, event.target.value);
+      rendition.status = event.target.value;
+      persistState();
     });
 
-    row.innerHTML = `
+    renditionRow.innerHTML = `
       <td>${rendition.renditionNumber}</td>
       <td>${rendition.employee}</td>
       <td>${currencyFormatter.format(rendition.total)}</td>
@@ -178,57 +167,94 @@ function renderSummary() {
 
     const statusCell = document.createElement('td');
     statusCell.appendChild(statusSelect);
-    row.appendChild(statusCell);
+    renditionRow.appendChild(statusCell);
+    renditionsBody.appendChild(renditionRow);
 
-    summaryBody.appendChild(row);
+    rendition.expenses.forEach((expense) => {
+      const expenseRow = document.createElement('tr');
+      expenseRow.innerHTML = `
+        <td>${rendition.renditionNumber}</td>
+        <td>${rendition.employee}</td>
+        <td>${expense.expenseType}</td>
+        <td>${currencyFormatter.format(expense.amount)}</td>
+        <td>${receiptHtml(expense.receipt)}</td>
+      `;
+      expensesBody.appendChild(expenseRow);
+    });
   });
 
   globalTotalElement.textContent = currencyFormatter.format(globalTotal);
 }
 
 function render() {
-  renderExpenses();
-  renderSummary();
+  renderDraft();
+  renderRenditions();
 }
 
-form.addEventListener('submit', async (event) => {
+expenseForm.addEventListener('submit', async (event) => {
   event.preventDefault();
 
-  const submitButton = form.querySelector('button[type="submit"]');
-  submitButton.disabled = true;
-  submitButton.textContent = 'Guardando...';
+  const renditionNumber = normalizedRenditionNumber(renditionForm.renditionNumber.value);
+  const employee = String(renditionForm.employee.value).trim();
 
-  try {
-    const formData = new FormData(form);
-    const amount = Number(formData.get('amount'));
-    const renditionNumber = normalizedRenditionNumber(formData.get('renditionNumber'));
-
-    const receiptFile = form.querySelector('#backup').files[0];
-    const receipt = receiptFile ? await readFileAsDataUrl(receiptFile) : null;
-
-    const newExpense = {
-      id: crypto.randomUUID(),
-      employee: String(formData.get('employee')).trim(),
-      renditionNumber,
-      expenseType: String(formData.get('expenseType')).trim(),
-      amount,
-      receipt,
-      createdAt: new Date().toISOString(),
-    };
-
-    state.expenses.push(newExpense);
-
-    if (!state.renditionStatuses[renditionNumber]) {
-      state.renditionStatuses[renditionNumber] = 'Pendiente';
-    }
-
-    persistState();
-    form.reset();
-    render();
-  } finally {
-    submitButton.disabled = false;
-    submitButton.textContent = 'Agregar gasto';
+  if (!renditionNumber || !employee) {
+    alert('Primero completa nombre trabajador y número de rendición.');
+    return;
   }
+
+  const formData = new FormData(expenseForm);
+  const amount = Number(formData.get('amount'));
+  const receiptFile = expenseForm.querySelector('#backup').files[0];
+
+  const newExpense = {
+    expenseType: String(formData.get('expenseType')).trim(),
+    amount,
+    receipt: receiptFile ? await readFileAsDataUrl(receiptFile) : null,
+  };
+
+  draftExpenses.push(newExpense);
+  expenseForm.reset();
+  renderDraft();
+});
+
+saveRenditionButton.addEventListener('click', () => {
+  const renditionNumber = normalizedRenditionNumber(renditionForm.renditionNumber.value);
+  const employee = String(renditionForm.employee.value).trim();
+
+  if (!employee || !renditionNumber) {
+    alert('Completa nombre trabajador y número de rendición.');
+    return;
+  }
+
+  if (draftExpenses.length === 0) {
+    alert('Debes agregar al menos un gasto antes de guardar la rendición.');
+    return;
+  }
+
+  const alreadyExists = state.renditions.some((rendition) => rendition.renditionNumber === renditionNumber);
+  if (alreadyExists) {
+    alert('Ya existe una rendición con ese número. Usa otro número.');
+    return;
+  }
+
+  const total = draftExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+
+  state.renditions.push({
+    id: crypto.randomUUID(),
+    renditionNumber,
+    employee,
+    status: 'Pendiente',
+    total,
+    expenses: structuredClone(draftExpenses),
+    createdAt: new Date().toISOString(),
+  });
+
+  persistState();
+
+  draftExpenses = [];
+  renditionForm.reset();
+  expenseForm.reset();
+  render();
 });
 
 render();
