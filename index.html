@@ -11,17 +11,28 @@
       <header>
         <h1>Rinde-Gastos</h1>
         <p>
-          Carga rendiciones de trabajadores y revisa el detalle con respaldos. Esta
-          versión guarda los datos en una base local del navegador.
+          Ingresa gastos por rendición con su comprobante, calcula el total y gestiona
+          el estado: Pendiente, Revisado o Pagado.
         </p>
       </header>
 
       <section class="card">
-        <h2>Nueva rendición</h2>
+        <h2>Nuevo gasto de rendición</h2>
         <form id="expense-form">
           <div class="field">
-            <label for="employee">Trabajador</label>
+            <label for="employee">Nombre trabajador</label>
             <input id="employee" name="employee" type="text" required placeholder="Ej: Ana Pérez" />
+          </div>
+
+          <div class="field">
+            <label for="renditionNumber">Número de rendición</label>
+            <input
+              id="renditionNumber"
+              name="renditionNumber"
+              type="text"
+              required
+              placeholder="Ej: R-2026-001"
+            />
           </div>
 
           <div class="field">
@@ -36,61 +47,60 @@
           </div>
 
           <div class="field">
-            <label for="detail">Detalle</label>
-            <textarea
-              id="detail"
-              name="detail"
-              rows="3"
-              placeholder="Ej: Taxi aeropuerto a oficina"
-            ></textarea>
-          </div>
-
-          <div class="field">
-            <label for="amount">Valor</label>
+            <label for="amount">Monto</label>
             <input id="amount" name="amount" type="number" min="0" step="1" required />
           </div>
 
           <div class="field">
-            <label for="backups">Respaldos (boletas, facturas, imágenes)</label>
-            <input id="backups" name="backups" type="file" multiple accept="image/*,.pdf" />
-            <small>Las imágenes se guardan en la base local para poder previsualizarlas.</small>
+            <label for="backup">Comprobante</label>
+            <input id="backup" name="backup" type="file" accept="image/*,.pdf" required />
           </div>
 
-          <button type="submit">Guardar rendición</button>
+          <button type="submit">Agregar gasto</button>
         </form>
       </section>
 
       <section class="card">
-        <h2>Resumen inicial</h2>
-        <p id="empty-state">Aún no hay rendiciones cargadas.</p>
+        <h2>Gastos ingresados</h2>
+        <p id="empty-expenses">Aún no hay gastos cargados.</p>
 
         <div class="table-wrapper" aria-live="polite">
           <table id="expenses-table" hidden>
             <thead>
               <tr>
+                <th>N° Rendición</th>
                 <th>Trabajador</th>
-                <th>Gasto</th>
-                <th>Detalle</th>
-                <th>Valor</th>
-                <th>Respaldos</th>
+                <th>Tipo gasto</th>
+                <th>Monto</th>
+                <th>Comprobante</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Resumen por rendición</h2>
+        <p id="empty-summary">Aún no hay rendiciones para resumir.</p>
+
+        <div class="table-wrapper" aria-live="polite">
+          <table id="summary-table" hidden>
+            <thead>
+              <tr>
+                <th>N° Rendición</th>
+                <th>Trabajador</th>
+                <th>Total rendición</th>
+                <th>Estado</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
 
-        <div id="totals" hidden>
-          <p><strong>Total rendiciones:</strong> <span id="count">0</span></p>
-          <p><strong>Total valor:</strong> <span id="total-amount">$0</span></p>
+        <div id="global-totals" hidden>
+          <p><strong>Total general:</strong> <span id="global-total">$0</span></p>
         </div>
-      </section>
-
-      <section class="card">
-        <h2>Vista tipo base de datos (JSON)</h2>
-        <p class="muted">
-          Aquí puedes ver exactamente cómo queda guardada cada rendición y sus adjuntos.
-        </p>
-        <pre id="database-view">[]</pre>
       </section>
     </main>
 

@@ -49,8 +49,8 @@ h2 {
 }
 
 input,
-textarea,
-button {
+button,
+select {
   padding: 0.6rem;
   border-radius: 8px;
   border: 1px solid var(--line);
@@ -91,12 +91,11 @@ td {
   vertical-align: top;
 }
 
-small,
 .muted {
   color: #55657a;
 }
 
-#totals {
+#global-totals {
   margin-top: 0.9rem;
 }
 
@@ -114,12 +113,6 @@ small,
   object-fit: cover;
 }
 
-#database-view {
-  margin: 0;
-  padding: 0.8rem;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #f9fbfe;
-  overflow-x: auto;
-  max-height: 320px;
+.status-select {
+  min-width: 120px;
 }

@@ -1,22 +1,30 @@
 # Rinde-Gastos
 
-Aplicación web para cargar rendiciones de trabajadores y ver un resumen con:
+Aplicación web para cargar gastos de rendiciones con comprobantes y ver un resumen por número de rendición.
 
+## Campos de ingreso
+
+- Nombre del trabajador.
+- Número de rendición.
 - Tipo de gasto.
-- Detalle de la rendición.
-- Valor.
-- Respaldos adjuntos con previsualización de imágenes.
+- Monto.
+- Comprobante (imagen o PDF) por cada gasto.
 
-## ¿Dónde quedan guardados los adjuntos y rendiciones?
+## Qué muestra el sistema
 
-En esta versión quedan guardados en una **base local del navegador** (`localStorage`), por lo que:
+- Tabla de gastos ingresados con su comprobante.
+- Resumen por número de rendición con:
+  - Total de la rendición (suma de sus gastos).
+  - Estado por defecto **Pendiente**.
+  - Cambio de estado a **Revisado** o **Pagado**.
+- Total general acumulado.
 
-- Se conservan al recargar la página en el mismo navegador/equipo.
-- Se muestran en la sección **Vista tipo base de datos (JSON)**.
-- Los adjuntos de imagen se guardan en formato data URL para poder verlos.
+## Persistencia
+
+Los datos quedan guardados en `localStorage` del navegador (`rinde_gastos_db_v2`).
 
 ## Uso rápido
 
 1. Abre `index.html` en tu navegador.
-2. Completa trabajador, tipo de gasto, detalle, valor y adjunta respaldos.
-3. Presiona **Guardar rendición** para ver la tabla, totales, respaldos e imágenes.
+2. Ingresa cada gasto con su comprobante.
+3. Revisa el total por rendición y cambia el estado según avance el proceso.
