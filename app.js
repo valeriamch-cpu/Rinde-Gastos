@@ -123,17 +123,28 @@ function renderDraft() {
   draftTotalAmount.textContent = currencyFormatter.format(draftTotal());
 }
 
+function normalizeSearchText(value) {
+  return String(value)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function findRenditionByQuery(query) {
-  const normalized = String(query).trim().toLowerCase();
+  const normalized = normalizeSearchText(query);
   if (!normalized) {
     return null;
   }
 
-  return state.renditions.find((rendition) => {
-    const byNumber = rendition.renditionNumber.toLowerCase().includes(normalized);
-    const byEmployee = rendition.employee.toLowerCase().includes(normalized);
-    return byNumber || byEmployee;
-  }) || null;
+  return (
+    state.renditions.find((rendition) => {
+      const renditionNumber = normalizeSearchText(rendition.renditionNumber);
+      const employee = normalizeSearchText(rendition.employee);
+      return renditionNumber.includes(normalized) || employee.includes(normalized);
+    }) || null
+  );
 }
 
 function renderDetail() {
