@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rinde-Gastos</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Rinde-Gastos</h1>
+        <p>
+          Carga una rendición de gastos por trabajador y revisa un resumen inicial
+          con el tipo de gasto, el valor y los respaldos adjuntos.
+        </p>
+      </header>
+
+      <section class="card">
+        <h2>Nueva rendición</h2>
+        <form id="expense-form">
+          <div class="field">
+            <label for="employee">Trabajador</label>
+            <input id="employee" name="employee" type="text" required placeholder="Ej: Ana Pérez" />
+          </div>
+
+          <div class="field">
+            <label for="expenseType">Tipo de gasto</label>
+            <input
+              id="expenseType"
+              name="expenseType"
+              type="text"
+              required
+              placeholder="Ej: Transporte"
+            />
+          </div>
+
+          <div class="field">
+            <label for="amount">Valor</label>
+            <input id="amount" name="amount" type="number" min="0" step="0.01" required />
+          </div>
+
+          <div class="field">
+            <label for="backups">Respaldos (boletas, facturas, etc.)</label>
+            <input id="backups" name="backups" type="file" multiple />
+            <small>Los archivos se registran por nombre en esta primera versión.</small>
+          </div>
+
+          <button type="submit">Agregar rendición</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Resumen inicial</h2>
+        <p id="empty-state">Aún no hay rendiciones cargadas.</p>
+
+        <div class="table-wrapper" aria-live="polite">
+          <table id="expenses-table" hidden>
+            <thead>
+              <tr>
+                <th>Trabajador</th>
+                <th>Gasto</th>
+                <th>Valor</th>
+                <th>Respaldos</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div id="totals" hidden>
+          <p><strong>Total rendiciones:</strong> <span id="count">0</span></p>
+          <p><strong>Total valor:</strong> <span id="total-amount">$0</span></p>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
