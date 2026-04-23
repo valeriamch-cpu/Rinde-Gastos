@@ -28,6 +28,11 @@ header {
   margin-bottom: 1rem;
 }
 
+
+#install-app {
+  margin-top: 0.5rem;
+}
+
 h1,
 h2,
 h3 {
@@ -40,25 +45,6 @@ h3 {
   border-radius: 12px;
   padding: 1rem;
   margin-bottom: 1rem;
-}
-
-
-.summary-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
-  flex-wrap: wrap;
-}
-
-.detail-search-inline {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.detail-search-inline input {
-  min-width: 240px;
 }
 
 .inline-grid {
@@ -102,11 +88,6 @@ button:hover {
   margin-top: 0.5rem;
 }
 
-.link-button {
-  padding: 0.35rem 0.6rem;
-  font-size: 0.85rem;
-}
-
 .table-wrapper {
   overflow-x: auto;
 }
@@ -125,11 +106,7 @@ td {
   vertical-align: top;
 }
 
-.muted {
-  color: #55657a;
-}
-
-
+.muted,
 small {
   color: #55657a;
 }
@@ -139,11 +116,16 @@ small {
   margin-top: 0.9rem;
 }
 
+#all-details {
+  display: grid;
+  gap: 0.8rem;
+}
 
-.detail-panel {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--line);
+.detail-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.8rem;
+  background: #fbfdff;
 }
 
 .backup-item {

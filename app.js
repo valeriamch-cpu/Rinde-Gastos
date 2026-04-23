@@ -1,4 +1,4 @@
-const STORAGE_KEY = 'rinde_gastos_db_v3';
+const STORAGE_KEY = 'rinde_gastos_db_v4';
 
 const renditionForm = document.querySelector('#rendition-form');
 const expenseForm = document.querySelector('#expense-form');
@@ -16,13 +16,9 @@ const emptyRenditions = document.querySelector('#empty-renditions');
 const globalTotals = document.querySelector('#global-totals');
 const globalTotalElement = document.querySelector('#global-total');
 
-const detailPanel = document.querySelector('#detail-panel');
-const detailEmployee = document.querySelector('#detail-employee');
-const detailNumber = document.querySelector('#detail-number');
-const detailStatus = document.querySelector('#detail-status');
-const detailExpensesBody = document.querySelector('#detail-expenses-table tbody');
-const detailSearchInput = document.querySelector('#detail-search-input');
-const detailSearchButton = document.querySelector('#detail-search-button');
+const allDetailsContainer = document.querySelector('#all-details');
+const emptyAllDetails = document.querySelector('#empty-all-details');
+const installAppButton = document.querySelector('#install-app');
 
 const currencyFormatter = new Intl.NumberFormat('es-CL', {
   style: 'currency',
@@ -30,10 +26,11 @@ const currencyFormatter = new Intl.NumberFormat('es-CL', {
   maximumFractionDigits: 0,
 });
 
+let deferredInstallPrompt = null;
+
 const defaultData = { renditions: [] };
 let state = loadState();
 let draftExpenses = [];
-let selectedRenditionId = null;
 
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -123,64 +120,13 @@ function renderDraft() {
   draftTotalAmount.textContent = currencyFormatter.format(draftTotal());
 }
 
-function normalizeSearchText(value) {
-  return String(value)
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function findRenditionByQuery(query) {
-  const normalized = normalizeSearchText(query);
-  if (!normalized) {
-    return null;
-  }
-
-  return (
-    state.renditions.find((rendition) => {
-      const renditionNumber = normalizeSearchText(rendition.renditionNumber);
-      const employee = normalizeSearchText(rendition.employee);
-      return renditionNumber.includes(normalized) || employee.includes(normalized);
-    }) || null
-  );
-}
-
-function renderDetail() {
-  const rendition = state.renditions.find((item) => item.id === selectedRenditionId);
-
-  if (!rendition) {
-    detailPanel.hidden = true;
-    detailExpensesBody.innerHTML = '';
-    return;
-  }
-
-  detailPanel.hidden = false;
-  detailEmployee.textContent = rendition.employee;
-  detailNumber.textContent = rendition.renditionNumber;
-  detailStatus.value = rendition.status || 'Pendiente';
-
-  detailExpensesBody.innerHTML = '';
-  rendition.expenses.forEach((expense) => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${expense.expenseType}</td>
-      <td>${currencyFormatter.format(expense.amount)}</td>
-      <td>${receiptHtml(expense.receipt)}</td>
-    `;
-    detailExpensesBody.appendChild(row);
-  });
-}
-
-function renderRenditions() {
+function renderSummary() {
   renditionsBody.innerHTML = '';
 
   if (state.renditions.length === 0) {
     emptyRenditions.hidden = false;
     renditionsTable.hidden = true;
     globalTotals.hidden = true;
-    detailPanel.hidden = true;
     return;
   }
 
@@ -196,60 +142,125 @@ function renderRenditions() {
     const row = document.createElement('tr');
     row.innerHTML = `
       <td>${rendition.renditionNumber}</td>
+      <td>${rendition.employee}</td>
       <td>${currencyFormatter.format(rendition.total)}</td>
-      <td><button type="button" class="link-button" data-rendition-id="${rendition.id}">Ver detalle</button></td>
     `;
+
     renditionsBody.appendChild(row);
   });
 
   globalTotalElement.textContent = currencyFormatter.format(globalTotal);
-  renderDetail();
+}
+
+function renderAllDetails() {
+  allDetailsContainer.innerHTML = '';
+
+  if (state.renditions.length === 0) {
+    emptyAllDetails.hidden = false;
+    return;
+  }
+
+  emptyAllDetails.hidden = true;
+
+  state.renditions.forEach((rendition) => {
+    const detailCard = document.createElement('article');
+    detailCard.className = 'detail-card';
+
+    const rows = rendition.expenses
+      .map(
+        (expense) => `
+          <tr>
+            <td>${expense.expenseType}</td>
+            <td>${currencyFormatter.format(expense.amount)}</td>
+            <td>${receiptHtml(expense.receipt)}</td>
+          </tr>
+        `,
+      )
+      .join('');
+
+    detailCard.innerHTML = `
+      <h3>Rendición ${rendition.renditionNumber}</h3>
+      <p><strong>Trabajador:</strong> ${rendition.employee}</p>
+      <p><strong>Total:</strong> ${currencyFormatter.format(rendition.total)}</p>
+      <p>
+        <strong>Estado:</strong>
+        <select class="status-select" data-rendition-id="${rendition.id}">
+          <option value="Pendiente" ${rendition.status === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+          <option value="Revisado" ${rendition.status === 'Revisado' ? 'selected' : ''}>Revisado</option>
+          <option value="Pagado" ${rendition.status === 'Pagado' ? 'selected' : ''}>Pagado</option>
+        </select>
+      </p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo gasto</th>
+              <th>Monto</th>
+              <th>Comprobante</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
+    `;
+
+    allDetailsContainer.appendChild(detailCard);
+  });
+}
+
+
+function setupPwaInstall() {
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch((error) => {
+        console.error('No se pudo registrar service worker:', error);
+      });
+    });
+  }
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    installAppButton.hidden = false;
+  });
+
+  installAppButton.addEventListener('click', async () => {
+    if (!deferredInstallPrompt) {
+      alert('Para instalar, abre esta app en navegador compatible (Chrome/Edge) y usa "Instalar app".');
+      return;
+    }
+
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    installAppButton.hidden = true;
+  });
+
+  window.addEventListener('appinstalled', () => {
+    installAppButton.hidden = true;
+    deferredInstallPrompt = null;
+  });
 }
 
 function render() {
   renderDraft();
-  renderRenditions();
+  renderSummary();
+  renderAllDetails();
 }
 
-renditionsBody.addEventListener('click', (event) => {
-  const button = event.target.closest('button[data-rendition-id]');
-  if (!button) {
+allDetailsContainer.addEventListener('change', (event) => {
+  const select = event.target.closest('select[data-rendition-id]');
+  if (!select) {
     return;
   }
 
-  selectedRenditionId = button.dataset.renditionId;
-  renderDetail();
-});
-
-detailStatus.addEventListener('change', (event) => {
-  const rendition = state.renditions.find((item) => item.id === selectedRenditionId);
+  const rendition = state.renditions.find((item) => item.id === select.dataset.renditionId);
   if (!rendition) {
     return;
   }
 
-  rendition.status = event.target.value;
+  rendition.status = select.value;
   persistState();
-});
-
-
-detailSearchButton.addEventListener('click', () => {
-  const result = findRenditionByQuery(detailSearchInput.value);
-  if (!result) {
-    alert('No se encontró una rendición con ese nombre o número.');
-    return;
-  }
-
-  selectedRenditionId = result.id;
-  renderDetail();
-});
-
-detailSearchInput.addEventListener('keydown', (event) => {
-  if (event.key !== 'Enter') {
-    return;
-  }
-
-  event.preventDefault();
-  detailSearchButton.click();
 });
 
 expenseForm.addEventListener('submit', async (event) => {
@@ -307,7 +318,7 @@ saveRenditionButton.addEventListener('click', () => {
 
   const total = draftExpenses.reduce((sum, expense) => sum + expense.amount, 0);
 
-  const newRendition = {
+  state.renditions.push({
     id: crypto.randomUUID(),
     renditionNumber,
     employee,
@@ -315,16 +326,15 @@ saveRenditionButton.addEventListener('click', () => {
     total,
     expenses: structuredClone(draftExpenses),
     createdAt: new Date().toISOString(),
-  };
+  });
 
-  state.renditions.push(newRendition);
   persistState();
 
-  selectedRenditionId = newRendition.id;
   draftExpenses = [];
   renditionForm.reset();
   expenseForm.reset();
   render();
 });
 
+setupPwaInstall();
 render();

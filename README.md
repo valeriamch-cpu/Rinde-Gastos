@@ -10,20 +10,28 @@ Aplicación web para crear rendiciones con múltiples gastos y guardarlas al fin
 3. Revisar total del borrador.
 4. Presionar **Guardar rendición**.
 
-## Resumen
+## Qué puede hacer quien entre
 
-- En el resumen se muestra **solo el total de cada rendición**.
-- Al hacer click en **Ver detalle**, se despliega el detalle completo de esa rendición.
-- Al lado del título **Resumen de rendiciones** hay un buscador por nombre o número para abrir el detalle rápidamente.
-- En el detalle se puede cambiar estado: **Pendiente**, **Revisado**, **Pagado**.
+- Subir sus rendiciones desde el formulario superior.
+- Ver el resumen de todas las rendiciones guardadas.
+- Ver el detalle de **todas** las rendiciones en la sección inferior.
+- Cambiar estado de cada rendición: **Pendiente**, **Revisado**, **Pagado**.
 
 ## Persistencia
 
-Los datos quedan guardados en `localStorage` del navegador (`rinde_gastos_db_v3`).
+Los datos quedan guardados en `localStorage` del navegador (`rinde_gastos_db_v4`).
 
 ## Uso rápido
 
 1. Abre `index.html` en tu navegador.
 2. Sigue el flujo de borrador y guarda la rendición al finalizar.
-3. En resumen usa **Ver detalle** para inspeccionar gastos y comprobantes.
-4. Para imágenes en teléfono, usa el campo de cámara (capture) para abrir cámara directamente.
+3. Revisa abajo el detalle completo de todas las rendiciones.
+
+
+## Descargar como app (PWA)
+
+- Abre la app en Chrome o Edge.
+- Si aparece el botón **Descargar app**, presiónalo para instalar.
+- También puedes usar el menú del navegador: **Instalar aplicación**.
+- Una vez instalada, se abre como app independiente (sin barra del navegador).
+
