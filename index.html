@@ -25,13 +25,7 @@
 
           <div class="field">
             <label for="renditionNumber">Número de rendición</label>
-            <input
-              id="renditionNumber"
-              name="renditionNumber"
-              type="text"
-              required
-              placeholder="Ej: R-2026-001"
-            />
+            <input id="renditionNumber" name="renditionNumber" type="text" required placeholder="Ej: R-2026-001" />
           </div>
         </form>
 
@@ -48,8 +42,20 @@
           </div>
 
           <div class="field field-span-2">
-            <label for="backup">Comprobante</label>
-            <input id="backup" name="backup" type="file" accept="image/*,.pdf" required />
+            <label for="backup">Comprobante (archivo o PDF)</label>
+            <input id="backup" name="backup" type="file" accept="image/*,.pdf" />
+          </div>
+
+          <div class="field field-span-2">
+            <label for="cameraBackup">Tomar foto con cámara (celular)</label>
+            <input
+              id="cameraBackup"
+              name="cameraBackup"
+              type="file"
+              accept="image/*"
+              capture="environment"
+            />
+            <small>En celular puedes abrir cámara directo para adjuntar la imagen.</small>
           </div>
 
           <div class="field field-span-2">
@@ -79,7 +85,7 @@
       </section>
 
       <section class="card">
-        <h2>Rendiciones guardadas</h2>
+        <h2>Resumen de rendiciones</h2>
         <p id="empty-renditions">Aún no hay rendiciones guardadas.</p>
 
         <div class="table-wrapper">
@@ -87,9 +93,8 @@
             <thead>
               <tr>
                 <th>N° Rendición</th>
-                <th>Trabajador</th>
                 <th>Total rendición</th>
-                <th>Estado</th>
+                <th>Detalle</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -99,25 +104,32 @@
         <div id="global-totals" hidden>
           <p><strong>Total general:</strong> <span id="global-total">$0</span></p>
         </div>
-      </section>
 
-      <section class="card">
-        <h2>Detalle de gastos por rendición</h2>
-        <p id="empty-expenses">Aún no hay gastos guardados.</p>
+        <div id="detail-panel" class="detail-panel" hidden>
+          <h3>Detalle de rendición</h3>
+          <p><strong>Trabajador:</strong> <span id="detail-employee"></span></p>
+          <p><strong>N° Rendición:</strong> <span id="detail-number"></span></p>
+          <p>
+            <strong>Estado:</strong>
+            <select id="detail-status" class="status-select">
+              <option value="Pendiente">Pendiente</option>
+              <option value="Revisado">Revisado</option>
+              <option value="Pagado">Pagado</option>
+            </select>
+          </p>
 
-        <div class="table-wrapper">
-          <table id="expenses-table" hidden>
-            <thead>
-              <tr>
-                <th>N° Rendición</th>
-                <th>Trabajador</th>
-                <th>Tipo gasto</th>
-                <th>Monto</th>
-                <th>Comprobante</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+          <div class="table-wrapper">
+            <table id="detail-expenses-table">
+              <thead>
+                <tr>
+                  <th>Tipo gasto</th>
+                  <th>Monto</th>
+                  <th>Comprobante</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
         </div>
       </section>
     </main>

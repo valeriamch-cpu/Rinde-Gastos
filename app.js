@@ -16,9 +16,11 @@ const emptyRenditions = document.querySelector('#empty-renditions');
 const globalTotals = document.querySelector('#global-totals');
 const globalTotalElement = document.querySelector('#global-total');
 
-const expensesTable = document.querySelector('#expenses-table');
-const expensesBody = expensesTable.querySelector('tbody');
-const emptyExpenses = document.querySelector('#empty-expenses');
+const detailPanel = document.querySelector('#detail-panel');
+const detailEmployee = document.querySelector('#detail-employee');
+const detailNumber = document.querySelector('#detail-number');
+const detailStatus = document.querySelector('#detail-status');
+const detailExpensesBody = document.querySelector('#detail-expenses-table tbody');
 
 const currencyFormatter = new Intl.NumberFormat('es-CL', {
   style: 'currency',
@@ -29,6 +31,7 @@ const currencyFormatter = new Intl.NumberFormat('es-CL', {
 const defaultData = { renditions: [] };
 let state = loadState();
 let draftExpenses = [];
+let selectedRenditionId = null;
 
 function loadState() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -118,78 +121,89 @@ function renderDraft() {
   draftTotalAmount.textContent = currencyFormatter.format(draftTotal());
 }
 
+function renderDetail() {
+  const rendition = state.renditions.find((item) => item.id === selectedRenditionId);
+
+  if (!rendition) {
+    detailPanel.hidden = true;
+    detailExpensesBody.innerHTML = '';
+    return;
+  }
+
+  detailPanel.hidden = false;
+  detailEmployee.textContent = rendition.employee;
+  detailNumber.textContent = rendition.renditionNumber;
+  detailStatus.value = rendition.status || 'Pendiente';
+
+  detailExpensesBody.innerHTML = '';
+  rendition.expenses.forEach((expense) => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${expense.expenseType}</td>
+      <td>${currencyFormatter.format(expense.amount)}</td>
+      <td>${receiptHtml(expense.receipt)}</td>
+    `;
+    detailExpensesBody.appendChild(row);
+  });
+}
+
 function renderRenditions() {
   renditionsBody.innerHTML = '';
-  expensesBody.innerHTML = '';
 
   if (state.renditions.length === 0) {
     emptyRenditions.hidden = false;
     renditionsTable.hidden = true;
     globalTotals.hidden = true;
-    emptyExpenses.hidden = false;
-    expensesTable.hidden = true;
+    detailPanel.hidden = true;
     return;
   }
 
   emptyRenditions.hidden = true;
   renditionsTable.hidden = false;
   globalTotals.hidden = false;
-  emptyExpenses.hidden = true;
-  expensesTable.hidden = false;
 
   let globalTotal = 0;
 
   state.renditions.forEach((rendition) => {
     globalTotal += rendition.total;
 
-    const renditionRow = document.createElement('tr');
-    const statusSelect = document.createElement('select');
-    statusSelect.className = 'status-select';
-
-    ['Pendiente', 'Revisado', 'Pagado'].forEach((status) => {
-      const option = document.createElement('option');
-      option.value = status;
-      option.textContent = status;
-      statusSelect.appendChild(option);
-    });
-
-    statusSelect.value = rendition.status || 'Pendiente';
-    statusSelect.addEventListener('change', (event) => {
-      rendition.status = event.target.value;
-      persistState();
-    });
-
-    renditionRow.innerHTML = `
+    const row = document.createElement('tr');
+    row.innerHTML = `
       <td>${rendition.renditionNumber}</td>
-      <td>${rendition.employee}</td>
       <td>${currencyFormatter.format(rendition.total)}</td>
+      <td><button type="button" class="link-button" data-rendition-id="${rendition.id}">Ver detalle</button></td>
     `;
-
-    const statusCell = document.createElement('td');
-    statusCell.appendChild(statusSelect);
-    renditionRow.appendChild(statusCell);
-    renditionsBody.appendChild(renditionRow);
-
-    rendition.expenses.forEach((expense) => {
-      const expenseRow = document.createElement('tr');
-      expenseRow.innerHTML = `
-        <td>${rendition.renditionNumber}</td>
-        <td>${rendition.employee}</td>
-        <td>${expense.expenseType}</td>
-        <td>${currencyFormatter.format(expense.amount)}</td>
-        <td>${receiptHtml(expense.receipt)}</td>
-      `;
-      expensesBody.appendChild(expenseRow);
-    });
+    renditionsBody.appendChild(row);
   });
 
   globalTotalElement.textContent = currencyFormatter.format(globalTotal);
+  renderDetail();
 }
 
 function render() {
   renderDraft();
   renderRenditions();
 }
+
+renditionsBody.addEventListener('click', (event) => {
+  const button = event.target.closest('button[data-rendition-id]');
+  if (!button) {
+    return;
+  }
+
+  selectedRenditionId = button.dataset.renditionId;
+  renderDetail();
+});
+
+detailStatus.addEventListener('change', (event) => {
+  const rendition = state.renditions.find((item) => item.id === selectedRenditionId);
+  if (!rendition) {
+    return;
+  }
+
+  rendition.status = event.target.value;
+  persistState();
+});
 
 expenseForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -204,12 +218,19 @@ expenseForm.addEventListener('submit', async (event) => {
 
   const formData = new FormData(expenseForm);
   const amount = Number(formData.get('amount'));
-  const receiptFile = expenseForm.querySelector('#backup').files[0];
+  const backupFile = expenseForm.querySelector('#backup').files[0];
+  const cameraFile = expenseForm.querySelector('#cameraBackup').files[0];
+  const receiptFile = cameraFile || backupFile;
+
+  if (!receiptFile) {
+    alert('Debes adjuntar un comprobante (archivo o cámara).');
+    return;
+  }
 
   const newExpense = {
     expenseType: String(formData.get('expenseType')).trim(),
     amount,
-    receipt: receiptFile ? await readFileAsDataUrl(receiptFile) : null,
+    receipt: await readFileAsDataUrl(receiptFile),
   };
 
   draftExpenses.push(newExpense);
@@ -239,7 +260,7 @@ saveRenditionButton.addEventListener('click', () => {
 
   const total = draftExpenses.reduce((sum, expense) => sum + expense.amount, 0);
 
-  state.renditions.push({
+  const newRendition = {
     id: crypto.randomUUID(),
     renditionNumber,
     employee,
@@ -247,10 +268,12 @@ saveRenditionButton.addEventListener('click', () => {
     total,
     expenses: structuredClone(draftExpenses),
     createdAt: new Date().toISOString(),
-  });
+  };
 
+  state.renditions.push(newRendition);
   persistState();
 
+  selectedRenditionId = newRendition.id;
   draftExpenses = [];
   renditionForm.reset();
   expenseForm.reset();
