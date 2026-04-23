@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rinde-Gastos</title>
+    <meta name="theme-color" content="#0a66c2" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header>
+        <h1>Rinde-Gastos</h1>
+        <p>
+          Crea una rendición, agrégale múltiples gastos y guarda la rendición al final.
+          Todos pueden ver el detalle completo de todas las rendiciones guardadas.
+        </p>
+        <button id="install-app" type="button" hidden>Descargar app</button>
+
+        <div class="sharing-tools">
+          <button id="export-data" type="button">Exportar rendiciones</button>
+          <label class="import-label">
+            Importar rendiciones
+            <input id="import-data" type="file" accept="application/json" />
+          </label>
+          <button id="clear-filter" type="button">Ver todo</button>
+        </div>
+      </header>
+
+      <section class="card">
+        <h2>Nueva rendición (borrador)</h2>
+        <form id="rendition-form" class="inline-grid">
+          <div class="field">
+            <label for="employee">Nombre trabajador</label>
+            <input id="employee" name="employee" type="text" required placeholder="Ej: Ana Pérez" />
+          </div>
+
+          <div class="field">
+            <label for="renditionNumber">Número de rendición</label>
+            <input id="renditionNumber" name="renditionNumber" type="text" required placeholder="Ej: R-2026-001" />
+          </div>
+        </form>
+
+        <h3>Agregar gasto al borrador</h3>
+        <form id="expense-form" class="inline-grid">
+          <div class="field">
+            <label for="expenseType">Tipo de gasto</label>
+            <input id="expenseType" name="expenseType" type="text" required placeholder="Ej: Transporte" />
+          </div>
+
+          <div class="field">
+            <label for="amount">Monto</label>
+            <input id="amount" name="amount" type="number" min="0" step="1" required />
+          </div>
+
+          <div class="field field-span-2">
+            <label for="backup">Comprobante (archivo o PDF)</label>
+            <input id="backup" name="backup" type="file" accept="image/*,.pdf" />
+          </div>
+
+          <div class="field field-span-2">
+            <label for="cameraBackup">Tomar foto con cámara (celular)</label>
+            <input id="cameraBackup" name="cameraBackup" type="file" accept="image/*" capture="environment" />
+            <small>En celular puedes abrir cámara directo para adjuntar la imagen.</small>
+          </div>
+
+          <div class="field field-span-2">
+            <button type="submit">Agregar gasto al borrador</button>
+          </div>
+        </form>
+
+        <p id="empty-draft">Aún no has agregado gastos al borrador.</p>
+        <div class="table-wrapper">
+          <table id="draft-table" hidden>
+            <thead>
+              <tr>
+                <th>Tipo gasto</th>
+                <th>Monto</th>
+                <th>Comprobante</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div id="draft-total" hidden>
+          <p><strong>Total borrador:</strong> <span id="draft-total-amount">$0</span></p>
+        </div>
+
+        <button id="save-rendition" type="button" class="save-btn">Guardar rendición</button>
+      </section>
+
+      <section class="card">
+        <div class="summary-header">
+          <h2>Resumen de rendiciones</h2>
+          <div class="detail-search-inline">
+            <input id="detail-search-input" type="text" placeholder="Buscar por nombre o N° rendición" />
+            <button id="detail-search-button" type="button">Buscar</button>
+          </div>
+        </div>
+        <p id="empty-renditions">Aún no hay rendiciones guardadas.</p>
+
+        <div class="table-wrapper">
+          <table id="renditions-table" hidden>
+            <thead>
+              <tr>
+                <th>N° Rendición</th>
+                <th>Trabajador</th>
+                <th>Total rendición</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div id="global-totals" hidden>
+          <p><strong>Total general:</strong> <span id="global-total">$0</span></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Detalle de todas las rendiciones</h2>
+        <p class="muted">Puedes filtrar con el buscador de arriba.</p>
+        <p id="empty-all-details">Aún no hay detalles para mostrar.</p>
+        <div id="all-details"></div>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
