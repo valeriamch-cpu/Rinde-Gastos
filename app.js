@@ -1,5 +1,6 @@
 const STORAGE_KEY = 'rinde_gastos_shared';
 const LEGACY_STORAGE_KEYS = ['rinde_gastos_db_v4', 'rinde_gastos_db_v3', 'rinde_gastos_db_v2'];
+const BACKUP_KEY = 'rinde_gastos_backup_latest';
 
 const renditionForm = document.querySelector('#rendition-form');
 const expenseForm = document.querySelector('#expense-form');
@@ -73,6 +74,13 @@ function loadState() {
     }
   }
 
+  const backupState = parseState(localStorage.getItem(BACKUP_KEY));
+  if (backupState) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(backupState));
+    localStorage.setItem('rinde_gastos_db_v4', JSON.stringify(backupState));
+    return backupState;
+  }
+
   return structuredClone(defaultData);
 }
 
@@ -80,6 +88,7 @@ function persistState() {
   const payload = JSON.stringify(state);
   localStorage.setItem(STORAGE_KEY, payload);
   localStorage.setItem('rinde_gastos_db_v4', payload);
+  localStorage.setItem(BACKUP_KEY, payload);
 }
 
 function readFileAsDataUrl(file) {
@@ -353,10 +362,18 @@ function setupPwaInstall() {
   }
 
   window.addEventListener('beforeinstallprompt', (event) => {
+    if (!installAppButton) {
+      return;
+    }
+
     event.preventDefault();
     deferredInstallPrompt = event;
     installAppButton.hidden = false;
   });
+
+  if (!installAppButton) {
+    return;
+  }
 
   installAppButton.addEventListener('click', async () => {
     if (!deferredInstallPrompt) {
@@ -371,7 +388,9 @@ function setupPwaInstall() {
   });
 
   window.addEventListener('appinstalled', () => {
-    installAppButton.hidden = true;
+    if (installAppButton) {
+      installAppButton.hidden = true;
+    }
     deferredInstallPrompt = null;
   });
 }
@@ -397,40 +416,58 @@ allDetailsContainer.addEventListener('change', (event) => {
   persistState();
 });
 
-detailSearchButton.addEventListener('click', () => {
-  detailsFilter = detailSearchInput.value;
-  renderSummary();
-  renderAllDetails();
-});
+if (detailSearchButton && detailSearchInput) {
+  detailSearchButton.addEventListener('click', () => {
+    detailsFilter = detailSearchInput.value;
+    renderSummary();
+    renderAllDetails();
+  });
 
-detailSearchInput.addEventListener('keydown', (event) => {
-  if (event.key !== 'Enter') {
-    return;
-  }
+  detailSearchInput.addEventListener('input', () => {
+    detailsFilter = detailSearchInput.value;
+    renderSummary();
+    renderAllDetails();
+  });
+}
 
-  event.preventDefault();
-  detailSearchButton.click();
-});
+if (detailSearchInput && detailSearchButton) {
+  detailSearchInput.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter') {
+      return;
+    }
 
-clearFilterButton.addEventListener('click', () => {
-  detailsFilter = '';
-  detailSearchInput.value = '';
-  render();
-});
+    event.preventDefault();
+    detailSearchButton.click();
+  });
+}
 
-exportDataButton.addEventListener('click', () => {
-  exportData();
-});
+if (clearFilterButton) {
+  clearFilterButton.addEventListener('click', () => {
+    detailsFilter = '';
+    if (detailSearchInput) {
+      detailSearchInput.value = '';
+    }
+    render();
+  });
+}
 
-importDataInput.addEventListener('change', async (event) => {
-  try {
-    await importData(event.target.files[0]);
-  } catch (error) {
-    alert('No se pudo importar el archivo.');
-  } finally {
-    importDataInput.value = '';
-  }
-});
+if (exportDataButton) {
+  exportDataButton.addEventListener('click', () => {
+    exportData();
+  });
+}
+
+if (importDataInput) {
+  importDataInput.addEventListener('change', async (event) => {
+    try {
+      await importData(event.target.files[0]);
+    } catch (error) {
+      alert('No se pudo importar el archivo.');
+    } finally {
+      importDataInput.value = '';
+    }
+  });
+}
 
 expenseForm.addEventListener('submit', async (event) => {
   event.preventDefault();
