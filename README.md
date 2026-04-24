@@ -32,7 +32,7 @@ Además se guarda un respaldo local (`rinde_gastos_backup_latest`) para recupera
 1. Abre `index.html` en tu navegador.
 2. Sigue el flujo de borrador y guarda la rendición al finalizar.
 3. Revisa abajo el detalle completo de todas las rendiciones.
-4. Si otras personas llenan rendiciones en su app, pueden usar **Exportar rendiciones** y tú las cargas con **Importar rendiciones** para verlas todas en tu panel.
+4. Todas las rendiciones que se cargan en esta app quedan visibles en el panel general para tu revisión.
 
 
 ## Descargar como app (PWA)

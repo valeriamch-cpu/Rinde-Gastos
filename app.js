@@ -24,8 +24,6 @@ const installAppButton = document.querySelector('#install-app');
 const detailSearchInput = document.querySelector('#detail-search-input');
 const detailSearchButton = document.querySelector('#detail-search-button');
 const clearFilterButton = document.querySelector('#clear-filter');
-const exportDataButton = document.querySelector('#export-data');
-const importDataInput = document.querySelector('#import-data');
 
 const currencyFormatter = new Intl.NumberFormat('es-CL', {
   style: 'currency',
@@ -309,63 +307,6 @@ function renderAllDetails() {
 }
 
 
-function exportData() {
-  const payload = {
-    exportedAt: new Date().toISOString(),
-    renditions: state.renditions,
-  };
-
-  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `rendiciones-${new Date().toISOString().slice(0, 10)}.json`;
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
-function mergeImportedRenditions(renditions) {
-  const existingKeys = new Set(state.renditions.map((item) => renditionKey(item.employee, item.renditionNumber)));
-  let added = 0;
-
-  renditions.forEach((rendition) => {
-    const key = renditionKey(rendition.employee || '', rendition.renditionNumber || '');
-    if (!rendition?.renditionNumber || existingKeys.has(key)) {
-      return;
-    }
-
-    const normalized = normalizeRendition(rendition);
-
-    state.renditions.push(normalized);
-    existingKeys.add(key);
-    added += 1;
-  });
-
-  if (added > 0) {
-    persistState();
-    render();
-  }
-
-  alert(`Importación finalizada. Rendiciones agregadas: ${added}`);
-}
-
-async function importData(file) {
-  if (!file) {
-    return;
-  }
-
-  const text = await file.text();
-  const parsed = JSON.parse(text);
-  const renditions = Array.isArray(parsed) ? parsed : parsed.renditions;
-
-  if (!Array.isArray(renditions)) {
-    alert('El archivo no tiene formato válido de rendiciones.');
-    return;
-  }
-
-  mergeImportedRenditions(renditions);
-}
-
 function setupPwaInstall() {
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -465,23 +406,7 @@ if (clearFilterButton) {
   });
 }
 
-if (exportDataButton) {
-  exportDataButton.addEventListener('click', () => {
-    exportData();
-  });
-}
 
-if (importDataInput) {
-  importDataInput.addEventListener('change', async (event) => {
-    try {
-      await importData(event.target.files[0]);
-    } catch (error) {
-      alert('No se pudo importar el archivo.');
-    } finally {
-      importDataInput.value = '';
-    }
-  });
-}
 
 expenseForm.addEventListener('submit', async (event) => {
   event.preventDefault();
