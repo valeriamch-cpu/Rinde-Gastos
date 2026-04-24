@@ -40,6 +40,28 @@ let state = loadState();
 let draftExpenses = [];
 let detailsFilter = '';
 
+
+function normalizeRendition(rendition) {
+  const employee = String(rendition?.employee || 'Sin nombre');
+  const renditionNumber = String(rendition?.renditionNumber || '').trim();
+  const expenses = Array.isArray(rendition?.expenses) ? rendition.expenses : [];
+  const totalFromExpenses = expenses.reduce((sum, expense) => sum + Number(expense?.amount || 0), 0);
+
+  return {
+    id: rendition?.id || crypto.randomUUID(),
+    employee,
+    renditionNumber,
+    status: rendition?.status || 'Pendiente',
+    total: Number(rendition?.total || totalFromExpenses),
+    expenses: expenses.map((expense) => ({
+      expenseType: String(expense?.expenseType || 'Sin tipo'),
+      amount: Number(expense?.amount || 0),
+      receipt: expense?.receipt || null,
+    })),
+    createdAt: rendition?.createdAt || new Date().toISOString(),
+  };
+}
+
 function loadState() {
   const parseState = (raw) => {
     if (!raw) {
@@ -53,7 +75,7 @@ function loadState() {
       }
 
       return {
-        renditions: parsed.renditions,
+        renditions: parsed.renditions.map((rendition) => normalizeRendition(rendition)),
       };
     } catch (error) {
       return null;
@@ -312,15 +334,7 @@ function mergeImportedRenditions(renditions) {
       return;
     }
 
-    const normalized = {
-      id: rendition.id || crypto.randomUUID(),
-      renditionNumber: String(rendition.renditionNumber),
-      employee: String(rendition.employee || 'Sin nombre'),
-      status: rendition.status || 'Pendiente',
-      total: Number(rendition.total || 0),
-      expenses: Array.isArray(rendition.expenses) ? rendition.expenses : [],
-      createdAt: rendition.createdAt || new Date().toISOString(),
-    };
+    const normalized = normalizeRendition(rendition);
 
     state.renditions.push(normalized);
     existingKeys.add(key);
@@ -527,15 +541,17 @@ saveRenditionButton.addEventListener('click', () => {
 
   const total = draftExpenses.reduce((sum, expense) => sum + expense.amount, 0);
 
-  state.renditions.push({
-    id: crypto.randomUUID(),
-    renditionNumber,
-    employee,
-    status: 'Pendiente',
-    total,
-    expenses: structuredClone(draftExpenses),
-    createdAt: new Date().toISOString(),
-  });
+  state.renditions.push(
+    normalizeRendition({
+      id: crypto.randomUUID(),
+      renditionNumber,
+      employee,
+      status: 'Pendiente',
+      total,
+      expenses: structuredClone(draftExpenses),
+      createdAt: new Date().toISOString(),
+    }),
+  );
 
   persistState();
 
